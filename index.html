@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Illusion Hub with AEON Chatbot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Basic page styles for demo */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0D1117;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: #00FFE7;
+            text-align: center;
+            margin-top: 40px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* AEON Chatbot Styles */
+        .aeon-chatbot {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 10000;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Orb State */
+        .aeon-orb {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(122, 77, 255, 0.8);
+            box-shadow: 0 0 20px rgba(122, 77, 255, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .aeon-orb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(122, 77, 255, 0.7);
+        }
+
+        .aeon-orb-inner {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            position: relative;
+        }
+
+        .aeon-orb-pulse {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: white;
+            opacity: 0.6;
+            animation: aeonPulse 2s infinite;
+        }
+
+        @keyframes aeonPulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.6;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0.2;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0.6;
+            }
+        }
+
+        /* Chat Interface */
+        .aeon-chat-interface {
+            width: 380px;
+            height: 500px;
+            background: rgba(13, 17, 23, 0.95);
+            border-radius: 15px;
+            border: 1px solid rgba(122, 77, 255, 0.3);
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .aeon-chat-interface.active {
+            transform: translateY(0);
+            opacity: 1;
+            display: flex;
+        }
+
+        .aeon-chat-header {
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(11, 15, 26, 0.8);
+        }
+
+        .aeon-avatar-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .aeon-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #7A4DFF, #30E7F2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .aeon-avatar-face {
+            width: 60%;
+            height: 60%;
+            position: relative;
+        }
+
+        .aeon-avatar-eyes {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .aeon-avatar-eye {
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .aeon-avatar-eye.left {
+            animation: aeonBlink 5s infinite;
+        }
+
+        .aeon-avatar-eye.right {
+            animation: aeonBlink 5s infinite 0.5s;
+        }
+
+        .aeon-avatar-mouth {
+            width: 8px;
+            height: 2px;
+            background: white;
+            border-radius: 1px;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+        }
+
+        .aeon-avatar.talking .aeon-avatar-mouth {
+            animation: aeonTalk 0.5s infinite alternate;
+        }
+
+        @keyframes aeonBlink {
+            0%, 94%, 100% {
+                height: 4px;
+            }
+            95%, 99% {
+                height: 1px;
+            }
+        }
+
+        @keyframes aeonTalk {
+            0% {
+                height: 2px;
+            }
+            100% {
+                height: 5px;
+            }
+        }
+
+        .aeon-status {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .aeon-name {
+            font-weight: 600;
+            color: white;
+            font-size: 14px;
+        }
+
+        .aeon-status-indicator {
+            font-size: 12px;
+            color: #30E7F2;
+        }
+
+        .aeon-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .aeon-control-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .aeon-control-btn:hover {
+            background: rgba(122, 77, 255, 0.3);
+        }
+
+        .aeon-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .aeon-message {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            animation: aeonMessageAppear 0.3s ease;
+            word-wrap: break-word;
+        }
+
+        @keyframes aeonMessageAppear {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .aeon-message.user {
+            align-self: flex-end;
+            background: rgba(122, 77, 255, 0.2);
+            border: 1px solid rgba(122, 77, 255, 0.3);
+            color: white;
+        }
+
+        .aeon-message.bot {
+            align-self: flex-start;
+            background: rgba(48, 231, 242, 0.15);
+            border: 1px solid rgba(48, 231, 242, 0.3);
+            color: white;
+        }
+
+        .aeon-welcome-message {
+            background: rgba(48, 231, 242, 0.1);
+            border: 1px solid rgba(48, 231, 242, 0.2);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .aeon-quick-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .aeon-chip {
+            background: rgba(122, 77, 255, 0.2);
+            border: 1px solid rgba(122, 77, 255, 0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .aeon-chip:hover {
+            background: rgba(122, 77, 255, 0.3);
+        }
+
+        .aeon-input-container {
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .aeon-input-box {
+            display: flex;
+            gap: 10px;
+        }
+
+        #aeon-input {
+            flex: 1;
+            padding: 12px 15px;
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+        }
+
+        #aeon-input:focus {
+            border-color: rgba(122, 77, 255, 0.5);
+        }
+
+        .aeon-send-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #7A4DFF, #30E7F2);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .aeon-send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(122, 77, 255, 0.5);
+        }
+
+        .aeon-voice-indicator {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(122, 77, 255, 0.2);
+            border-radius: 20px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .aeon-voice-indicator.active {
+            display: flex;
+            animation: aeonPulse 1.5s infinite;
+        }
+
+        .aeon-thinking {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            background: rgba(48, 231, 242, 0.15);
+            border: 1px solid rgba(48, 231, 242, 0.3);
+            border-radius: 15px;
+            color: white;
+            font-size: 14px;
+            align-self: flex-start;
+            max-width: fit-content;
+        }
+
+        .aeon-thinking-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .aeon-thinking-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #30E7F2;
+            animation: aeonThinking 1.5s infinite;
+        }
+
+        .aeon-thinking-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .aeon-thinking-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes aeonThinking {
+            0%, 100% {
+                opacity: 0.3;
+                transform: translateY(0);
+            }
+            50% {
+                opacity: 1;
+                transform: translateY(-3px);
+            }
+        }
+
+        /* Scrollbar styling */
+        .aeon-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .aeon-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .aeon-messages::-webkit-scrollbar-thumb {
+            background: rgba(122, 77, 255, 0.3);
+            border-radius: 10px;
+        }
+
+        .aeon-messages::-webkit-scrollbar-thumb:hover {
+            background: rgba(122, 77, 255, 0.5);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .aeon-chatbot {
+                bottom: 15px;
+                right: 15px;
+            }
+            
+            .aeon-chat-interface {
+                width: calc(100vw - 30px);
+                height: 60vh;
+                bottom: 80px;
+                right: 15px;
+                position: fixed;
+            }
+            
+            .aeon-orb {
+                width: 56px;
+                height: 56px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .aeon-chat-interface {
+                height: 70vh;
+            }
+            
+            .aeon-message {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Illusion Hub Demo</h1>
+        <p>This is a demonstration page for the AEON chatbot. Click the orb at the bottom right to open the chatbot.</p>
+    </div>
+
+    <!-- AEON Chatbot Container -->
+    <div class="aeon-chatbot" id="aeon-chatbot">
+        <!-- Default Orb State -->
+        <div class="aeon-orb" id="aeon-orb">
+            <div class="aeon-orb-inner">
+                <div class="aeon-orb-pulse"></div>
+            </div>
+        </div>
+        
+        <!-- Chat Interface (initially hidden) -->
+        <div class="aeon-chat-interface" id="aeon-chat-interface">
+            <!-- Avatar Header -->
+            <div class="aeon-chat-header">
+                <div class="aeon-avatar-container">
+                    <div class="aeon-avatar" id="aeon-avatar">
+                        <div class="aeon-avatar-face">
+                            <div class="aeon-avatar-eyes">
+                                <div class="aeon-avatar-eye left"></div>
+                                <div class="aeon-avatar-eye right"></div>
+                            </div>
+                            <div class="aeon-avatar-mouth"></div>
+                        </div>
+                    </div>
+                    <div class="aeon-status">
+                        <span class="aeon-name">AEON</span>
+                        <span class="aeon-status-indicator" id="aeon-status">Online</span>
+                    </div>
+                </div>
+                <div class="aeon-controls">
+                    <button class="aeon-control-btn" id="aeon-voice-toggle" title="Voice Input">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <button class="aeon-control-btn" id="aeon-minimize" title="Minimize">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button class="aeon-control-btn" id="aeon-close" title="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Chat Messages Container -->
+            <div class="aeon-messages" id="aeon-messages">
+                <div class="aeon-welcome-message">
+                    <p>Hello! I'm AEON, your guide to Illusion Hub. How can I help you today?</p>
+                    <div class="aeon-quick-chips">
+                        <button class="aeon-chip" data-message="How do I create a world?">Create a world</button>
+                        <button class="aeon-chip" data-message="What can I explore?">Explore options</button>
+                        <button class="aeon-chip" data-message="How does VR mode work?">VR help</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Input Area -->
+            <div class="aeon-input-container">
+                <div class="aeon-input-box">
+                    <input type="text" id="aeon-input" placeholder="Ask me anything..." />
+                    <button id="aeon-send" class="aeon-send-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="aeon-voice-indicator" id="aeon-voice-indicator">
+                    <i class="fas fa-microphone"></i>
+                    <span>Listening...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // AEON Chatbot Implementation
+        class AeonChatbot {
+            constructor() {
+                this.isOpen = false;
+                this.isListening = false;
+                this.recognition = null;
+                this.messageCount = 0;
+                this.maxMessages = 50; // Limit to prevent performance issues
+                this.init();
+            }
+
+            init() {
+                // DOM Elements
+                this.orb = document.getElementById('aeon-orb');
+                this.chatInterface = document.getElementById('aeon-chat-interface');
+                this.messagesContainer = document.getElementById('aeon-messages');
+                this.input = document.getElementById('aeon-input');
+                this.sendButton = document.getElementById('aeon-send');
+                this.voiceToggle = document.getElementById('aeon-voice-toggle');
+                this.voiceIndicator = document.getElementById('aeon-voice-indicator');
+                this.minimizeBtn = document.getElementById('aeon-minimize');
+                this.closeBtn = document.getElementById('aeon-close');
+                this.avatar = document.getElementById('aeon-avatar');
+                this.statusIndicator = document.getElementById('aeon-status');
+
+                // Event Listeners
+                this.orb.addEventListener('click', () => this.toggleChat());
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+                this.input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.sendMessage();
+                });
+                
+                this.voiceToggle.addEventListener('click', () => this.toggleVoiceInput());
+                this.minimizeBtn.addEventListener('click', () => this.minimize());
+                this.closeBtn.addEventListener('click', () => this.close());
+                
+                // Quick chips
+                document.querySelectorAll('.aeon-chip').forEach(chip => {
+                    chip.addEventListener('click', (e) => {
+                        const message = e.target.getAttribute('data-message');
+                        this.addMessage(message, 'user');
+                        this.processMessage(message);
+                    });
+                });
+
+                // Initialize speech recognition if available
+                this.initSpeechRecognition();
+
+                // Preload responses
+                this.responses = this.getResponses();
+                
+                console.log("AEON Chatbot initialized successfully!");
+            }
+
+            toggleChat() {
+                if (this.isOpen) {
+                    this.close();
+                } else {
+                    this.open();
+                }
+            }
+
+            open() {
+                this.isOpen = true;
+                this.orb.style.display = 'none';
+                this.chatInterface.classList.add('active');
+                this.input.focus();
+                
+                // Add welcome message if it's the first time
+                if (this.messageCount === 0) {
+                    this.addMessage("Hello! I'm AEON, your guide to Illusion Hub. How can I help you today?", 'bot');
+                }
+                
+                console.log("Chatbot opened");
+            }
+
+            close() {
+                this.isOpen = false;
+                this.chatInterface.classList.remove('active');
+                setTimeout(() => {
+                    this.orb.style.display = 'flex';
+                }, 300);
+                
+                // Stop voice recognition if active
+                if (this.isListening) {
+                    this.stopVoiceInput();
+                }
+                
+                console.log("Chatbot closed");
+            }
+
+            minimize() {
+                this.close();
+            }
+
+            addMessage(text, type) {
+                // Clean up old messages if we have too many
+                if (this.messageCount >= this.maxMessages) {
+                    const messages = this.messagesContainer.querySelectorAll('.aeon-message');
+                    if (messages.length > 0) {
+                        messages[0].remove();
+                    }
+                }
+                
+                const messageEl = document.createElement('div');
+                messageEl.classList.add('aeon-message', type);
+                messageEl.textContent = text;
+                this.messagesContainer.appendChild(messageEl);
+                this.messageCount++;
+                this.scrollToBottom();
+            }
+
+            addThinkingIndicator() {
+                const thinkingEl = document.createElement('div');
+                thinkingEl.classList.add('aeon-thinking');
+                thinkingEl.innerHTML = `
+                    AEON is thinking
+                    <div class="aeon-thinking-dots">
+                        <div class="aeon-thinking-dot"></div>
+                        <div class="aeon-thinking-dot"></div>
+                        <div class="aeon-thinking-dot"></div>
+                    </div>
+                `;
+                this.messagesContainer.appendChild(thinkingEl);
+                this.scrollToBottom();
+                return thinkingEl;
+            }
+
+            removeThinkingIndicator(thinkingEl) {
+                if (thinkingEl && thinkingEl.parentNode) {
+                    thinkingEl.parentNode.removeChild(thinkingEl);
+                }
+            }
+
+            scrollToBottom() {
+                // Use a small timeout to ensure DOM is updated
+                setTimeout(() => {
+                    this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+                }, 50);
+            }
+
+            sendMessage() {
+                const message = this.input.value.trim();
+                if (message) {
+                    this.addMessage(message, 'user');
+                    this.input.value = '';
+                    this.processMessage(message);
+                }
+            }
+
+            processMessage(message) {
+                const thinkingEl = this.addThinkingIndicator();
+                
+                // Simulate processing delay
+                setTimeout(() => {
+                    this.removeThinkingIndicator(thinkingEl);
+                    const response = this.generateResponse(message);
+                    this.simulateTyping(response, 0);
+                }, 1000);
+            }
+
+            simulateTyping(text, index) {
+                if (index === 0) {
+                    const typingEl = document.createElement('div');
+                    typingEl.classList.add('aeon-message', 'bot');
+                    typingEl.id = 'aeon-typing-message';
+                    this.messagesContainer.appendChild(typingEl);
+                    this.avatar.classList.add('talking');
+                }
+
+                const typingEl = document.getElementById('aeon-typing-message');
+                if (typingEl && index < text.length) {
+                    typingEl.textContent = text.substring(0, index + 1);
+                    this.scrollToBottom();
+                    
+                    setTimeout(() => {
+                        this.simulateTyping(text, index + 1);
+                    }, 30);
+                } else if (typingEl) {
+                    // Finished typing
+                    setTimeout(() => {
+                        typingEl.removeAttribute('id');
+                        this.avatar.classList.remove('talking');
+                    }, 500);
+                }
+            }
+
+            generateResponse(message) {
+                const lowerMsg = message.toLowerCase();
+                
+                // Check for specific intents
+                for (const [key, response] of Object.entries(this.responses)) {
+                    if (lowerMsg.includes(key)) {
+                        return typeof response === 'function' ? response() : response;
+                    }
+                }
+                
+                // Default response
+                return "I'm here to help you navigate Illusion Hub. You can ask me about creating worlds, exploring experiences, using VR mode, or anything else about the platform!";
+            }
+
+            getResponses() {
+                return {
+                    'hello': 'Hello! How can I assist you with Illusion Hub today?',
+                    'hi': 'Hi there! What would you like to know about Illusion Hub?',
+                    'help': 'I can help you with:\n- Creating and customizing worlds\n- Exploring existing experiences\n- Using VR/AR features\n- Troubleshooting issues\n- Finding community events\n\nWhat do you need help with?',
+                    'create': () => {
+                        const options = [
+                            "To create a world, go to the Create section where you can choose from templates or build from scratch.",
+                            "You can create worlds using our drag-and-drop tools in the Create section. Would you like me to take you there?",
+                            "World creation starts in the Create area where you'll find templates, object libraries, and AI-assisted tools."
+                        ];
+                        return options[Math.floor(Math.random() * options.length)];
+                    },
+                    'explore': 'The Explore section contains all the amazing worlds created by our community. You can filter by category, popularity, or use the search function to find specific experiences.',
+                    'world': 'Worlds are immersive environments you can explore in Illusion Hub. You can visit community-created worlds or build your own in the Create section.',
+                    'vr': 'VR mode lets you experience Illusion Hub in virtual reality. Make sure your headset is connected, then click the VR toggle button to enter immersive mode.',
+                    '360': '360° mode uses your device orientation to create an immersive experience. Enable it with the toggle button and move your device to look around.',
+                    'problem': "I'm sorry you're experiencing issues. Could you describe the problem in more detail? Or you can try:\n1. Refreshing the page\n2. Checking your internet connection\n3. Clearing your browser cache",
+                    'thank': "You're welcome! Is there anything else I can help you with?",
+                    'name': "I'm AEON, your AI assistant for Illusion Hub. I'm here to help you navigate and make the most of your experience!",
+                    'guide': "I'd be happy to guide you! What would you like to do?\n- Create a new world\n- Explore existing experiences\n- Learn about VR features\n- Join community events",
+                    'community': 'Our community is where creators share their worlds and experiences. You can join events, collaborate on projects, or just explore what others have made.',
+                    'event': 'Check the Community section for upcoming events like weekly meetups, creation contests, and developer AMAs.',
+                    'ai': 'Illusion Hub uses AI to generate worlds, assist with creation, and power my conversational abilities! I can help you use our AI tools to create amazing experiences.',
+                    'tutorial': "I can guide you through various tutorials:\n- World creation basics\n- VR setup\n- Using AI generation tools\n- Community features\n\nWhich one are you interested in?",
+                    'setting': 'You can adjust your settings by clicking on your user avatar. From there you can control audio, video, accessibility, and privacy settings.',
+                    'account': 'Account management is available through your user profile. You can update your information, preferences, and privacy settings there.'
+                };
+            }
+
+            initSpeechRecognition() {
+                try {
+                    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                        this.recognition = new SpeechRecognition();
+                        this.recognition.continuous = false;
+                        this.recognition.interimResults = false;
+                        this.recognition.lang = 'en-US';
+
+                        this.recognition.onresult = (event) => {
+                            const transcript = event.results[0][0].transcript;
+                            console.log("Voice input:", transcript);
+                            this.addMessage(transcript, 'user');
+                            this.processMessage(transcript);
+                            this.stopVoiceInput();
+                        };
+
+                        this.recognition.onerror = (event) => {
+                            console.error('Speech recognition error', event.error);
+                            this.stopVoiceInput();
+                            this.addMessage("Sorry, I didn't catch that. Could you please type your message?", 'bot');
+                        };
+
+                        this.recognition.onend = () => {
+                            if (this.isListening) {
+                                this.stopVoiceInput();
+                                this.addMessage("I didn't hear anything. Please try again or type your message.", 'bot');
+                            }
+                        };
+                    } else {
+                        // Speech recognition not supported
+                        this.voiceToggle.style.display = 'none';
+                        console.warn("Speech recognition not supported in this browser");
+                    }
+                } catch (error) {
+                    console.error("Error initializing speech recognition:", error);
+                    this.voiceToggle.style.display = 'none';
+                }
+            }
+
+            toggleVoiceInput() {
+                if (this.isListening) {
+                    this.stopVoiceInput();
+                } else {
+                    this.startVoiceInput();
+                }
+            }
+
+            startVoiceInput() {
+                if (this.recognition) {
+                    try {
+                        this.isListening = true;
+                        this.voiceIndicator.classList.add('active');
+                        this.voiceToggle.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+                        this.voiceToggle.style.background = 'rgba(255, 50, 50, 0.3)';
+                        this.recognition.start();
+                        console.log("Voice recognition started");
+                    } catch (error) {
+                        console.error("Error starting voice recognition:", error);
+                        this.stopVoiceInput();
+                        this.addMessage("Voice input is not available. Please type your message.", 'bot');
+                    }
+                } else {
+                    this.addMessage("Voice input is not supported in your browser. Please type your message.", 'bot');
+                }
+            }
+
+            stopVoiceInput() {
+                if (this.recognition && this.isListening) {
+                    try {
+                        this.recognition.stop();
+                    } catch (error) {
+                        console.error("Error stopping voice recognition:", error);
+                    }
+                    this.isListening = false;
+                    this.voiceIndicator.classList.remove('active');
+                    this.voiceToggle.innerHTML = '<i class="fas fa-microphone"></i>';
+                    this.voiceToggle.style.background = '';
+                    console.log("Voice recognition stopped");
+                }
+            }
+        }
+
+        // Initialize AEON when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.aeon = new AeonChatbot();
+            
+            // Add keyboard shortcut (Ctrl + / or Cmd + /)
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+                    e.preventDefault();
+                    window.aeon.toggleChat();
+                }
+            });
+            
+            console.log("AEON Chatbot loaded successfully!");
+        });
+    </script>
+</body>
+</html>
